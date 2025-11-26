@@ -8,6 +8,7 @@
     "build:backend": "cd backend && cargo build --release"
   },
   "devDependencies": {
+    "@sveltejs/adapter-vercel": "^6.2.0",
     "concurrently": "^7.6.0"
   }
 }
