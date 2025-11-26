@@ -1,64 +1,78 @@
+use shuttle_axum::ShuttleAxum;
 use axum::{
-    extract::Path,
-    http::Method,
-    response::{IntoResponse, Response},
-    Json,
     routing::get,
-    Router,
+    routing::Router,
+    response::{Json, IntoResponse},
+    http::{StatusCode, Method},
 };
+use serde_json::json;
+use tower_http::cors::{CorsLayer, AllowOrigin, AllowMethods, AllowHeaders};
 use serde::Serialize;
-use tower_http::cors::{CorsLayer, Any};
-use db::{get_products_in_stock, establish_connection, models::Product};
 use axum::debug_handler;
+use diesel::prelude::*;
+use dotenvy::dotenv;
+use std::env;
+use diesel::result::Error;
+use self::models::{NewProduct, Product};
 
+pub mod models;
+pub mod schema;
 
-#[derive(Serialize)]
-pub struct ApiResponse<T> {
-    pub success: bool,
-    pub data: T,
+pub fn establish_connection() -> SqliteConnection {
+    // dotenvy::from_path("../");
+// env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = "./db/database.db";
+    SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
+pub fn get_products_in_stock(conn: &mut SqliteConnection) -> Result<Vec<Product>, Error> {
+    use crate::schema::products::dsl::*;
+
+    products
+        .filter(in_stock.eq(true))
+        .select(Product::as_select())
+        .load(conn)
 }
 
-impl<T: Serialize> IntoResponse for ApiResponse<T> {
-    fn into_response(self) -> Response {
-        Json(self).into_response()
-    }
+pub fn create_product(conn: &mut SqliteConnection, name: &str, description: &str, price_xmr: &str, image_ipfs_hash: &str) -> Product {
+    use crate::schema::products;
+
+    let new_product = NewProduct {
+        name,
+        price_xmr,
+        description,
+        image_ipfs_hash
+    };
+
+    diesel::insert_into(products::table)
+    .values(&new_product)
+    .returning(Product::as_returning())
+    .get_result(conn)
+    .expect("Error storing product")
 }
 
-#[debug_handler]
-async fn get_all_products() -> ApiResponse<Vec<Product>> {
+
+async fn get_all_products() -> impl IntoResponse {
     let conn = &mut establish_connection();
     match get_products_in_stock(conn) {
-        Ok(products) => ApiResponse {
-            success: true,
-            data: products,
-        },
-        Err(_) => ApiResponse {
-            success: false,
-            data: vec![],
-        },
+        Ok(products) => (StatusCode::OK, Json(products)).into_response(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "Failed to fetch products"})),
+        ).into_response(),
     }
 }
-
-async fn root() -> &'static str {
-    "Hello from Rust backend!"
-}
-#[tokio::main]
-async fn main() {
-
-        let cors = CorsLayer::new()
+#[shuttle_runtime::main]
+async fn main() -> shuttle_axum::ShuttleAxum {
+    let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Any)
-        .allow_headers(Any);
+        .allow_origin(AllowOrigin::any())
+        .allow_headers(AllowHeaders::any());
 
-
-    // build our application with a single route
     let app = Router::new()
         .route("/", get(get_all_products))
         .layer(cors);
-        
-    // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Server on localhost:3000");
-    axum::serve(listener, app).await.unwrap();
-    
+
+    // Return the app wrapped in ShuttleAxum
+    Ok(app.into())
 }
