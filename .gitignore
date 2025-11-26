@@ -1,0 +1,138 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+########################################
+# Node / JavaScript
+########################################
+
+# Dependency directories
+node_modules/
+.pnpm/
+.yarn/
+.yarn-cache/
+bun.lockb
+.pnp.cjs
+
+# Build output
+build/
+dist/
+.svelte-kit/
+vite.config.ts.timestamp*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+
+########################################
+# Svelte / SvelteKit Specific
+########################################
+
+# Output from adapters
+.vercel/
+.netlify/
+.output/
+.server_preload/
+
+# Generated files
+.svelte-kit/
+static/generated/
+.meta/
+
+
+########################################
+# Rust / Cargo
+########################################
+
+# Cargo build directory
+target/
+
+# Cargo backups
+**/*.rs.bk
+
+# Rustfmt backups
+**/*.rs.bk
+
+# Clippy
+.clippy.log
+
+# Rust analyzer cache
+.rustup/
+rust-toolchain.toml.timestamp*
+rust-toolchain.toml.old
+
+
+########################################
+# Diesel ORM
+########################################
+
+# Diesel CLI local cache
+diesel.toml
+diesel.toml.bak
+diesel.log
+
+# Migration temp files
+migrations/**/temp_*
+migrations/**/down.sql.bak
+migrations/**/up.sql.bak
+
+
+########################################
+# OS / Editor junk
+########################################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Trashes
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.iml
+
+# Others
+*.swp
+*.swo
+*.tmp
+*.temp
