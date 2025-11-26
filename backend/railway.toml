@@ -1,0 +1,12 @@
+# packages/backend/railway.toml
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "cargo run --release"
+
+[environments]
+  [environments.production]
+    [[environments.production.services]]
+      name = "web"
+      port = 3000
